@@ -1,0 +1,10 @@
+fixtures:
+  forge_modules:
+      docker:
+        repo: "garethr/docker"
+        ref: "3.3.2"
+      stdlib:
+        repo: "puppetlabs/stdlib"
+        ref: "2.6.0"
+  symlinks:
+    jenkins: "#{source_dir}"
