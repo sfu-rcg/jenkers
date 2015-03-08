@@ -1,0 +1,26 @@
+import jenkins.model.*
+import hudson.security.*
+
+/* Create an admin user */
+def instance    = Jenkins.getInstance()
+def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+def strategy    = new GlobalMatrixAuthorizationStrategy()
+
+instance.setSecurityRealm(hudsonRealm)
+instance.securityRealm.createAccount("<%= @administrator %>", "<%= @password %>")
+strategy.add(Jenkins.ADMINISTER, "<%= @administrator %>")
+instance.setAuthorizationStrategy(strategy)
+
+instance.save()
+
+/* Set the admin email address */
+def jenkinsLocationConfiguration = JenkinsLocationConfiguration.get()
+jenkinsLocationConfiguration.setAdminAddress("<%= @admin_email_name %> <<%= @admin_email_address %>>")
+jenkinsLocationConfiguration.save()
+
+/* Setup the Jenkins email service */
+def mailer = instance.getDescriptor("hudson.tasks.Mailer")
+mailer.setReplyToAddress("<%= @admin_email_address %>")
+mailer.setSmtpHost("<%= @smtp_host %>")
+mailer.setUseSsl(false)
+mailer.save()
