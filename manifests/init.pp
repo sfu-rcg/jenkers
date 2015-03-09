@@ -1,41 +1,148 @@
 # == Class: jenkins
 #
-# Full description of class jenkins here.
+# Installs Docker as required and stands-up an official docker/jenkins
+# instance with simple security.
 #
 # === Parameters
 #
-# Document parameters here.
+# [*container_name*]
+#   The name of the Jenkins container
 #
-# [*sample_parameter*]
-#   Explanation of what this parameter affects and what it defaults to.
-#   e.g. "Specify one or more upstream ntp servers as an array."
+# [*administrator*]
+#   The name of the Jenkins admin account
 #
-# === Variables
+# [*password*]
+#   Password for the Jenkins admin account
 #
-# Here you should define a list of variables that this module would require.
+# [*admin_email_name*]
+#   Full Name of the Jenkins SMTP user
 #
-# [*sample_variable*]
-#   Explanation of how this variable affects the funtion of this class and if
-#   it has a default. e.g. "The parameter enc_ntp_servers must be set by the
-#   External Node Classifier as a comma separated list of hostnames." (Note,
-#   global variables should be avoided in favor of class parameters as
-#   of Puppet 2.6.)
+# [*admin_email_address*]
+#   Email address of the Jenkins SMTP user
+#
+# [*smtp_host*]
+#   Name of the SMTP server Jenkins should use
+#
+# [*image_version*]
+#   Version of the official Jenkins image to use
+#
+# [*env_jenkins_home*]
+#   The location of Jenkins data store within the container
+#
+# [*local_data_store*]
+#   The location of Jenkins data store on the host
+#
+# [*host_port*]
+#   The port on the local host that will expose Jenkins
+#
+# [*run_at_startup*]
+#   Controls whetehr or not to use init.d to load Jenkins at startup
+#
+# [*plugin_source_url*]
+#   The source URL for fetching plugins
+#
+# [*plugins*]
+#   Hash listing plusgin to install (plugin => version)
 #
 # === Examples
 #
 #  class { 'jenkins':
-#    servers => [ 'pool.ntp.org', 'ntp.local.company.com' ],
+#    container_name => 'leeroy',
 #  }
 #
 # === Authors
 #
-# Author Name <author@domain.com>
+# Brian Warsing <bcw@sfu.ca>
 #
 # === Copyright
 #
-# Copyright 2015 Your name here, unless otherwise noted.
+# Copyright 2015 Simon Fraser Univeristy, unless otherwise noted.
 #
-class jenkins {
+class jenkins (
 
+  $container_name       = 'jenkins',
+  $administrator        = 'leeroy',
+  $password             = 'jenkins',
+  $admin_email_name     = 'Leeroy Jenkins',
+  $admin_email_address  = 'leeroy@foo.bar',
+  $smtp_host            = 'smtp.foo.bar',
+  $image_version        = 'latest',
+  $env_jenkins_home     = '/var/jenkins_home',
+  $local_data_store     = '/var/jenkins_home',
+  $host_port            = '8080',
+  $run_at_startup       = true,
+  $plugin_source_url    = 'http://mirrors.jenkins-ci.org/plugins/',
+  $plugins              = {},
+
+) {
+
+  $data_store_dirs = [$local_data_store, "$local_data_store/plugins"]
+  $plugin_execs    = transform_plugins_list($plugin_source_url, "$local_data_store/plugins", $plugins)
+
+  package { 'curl':
+    ensure => installed,
+  }
+
+  # Create a service group for Jenkins
+  group { 'jenkins':
+    gid => '1000',
+  }
+
+  # Create a service account for Jenkins
+  user { 'jenkins':
+    require => Group['jenkins'],
+    comment => 'Jenkins User',
+    home    => $local_data_store,
+    shell   => '/bin/false',
+    uid     => '1000',
+    gid     => '1000',
+  }
+
+  # Create a local Jenkins data store
+  file { $data_store_dirs:
+    ensure  => directory,
+    require => [User['jenkins'], Group['jenkins']],
+    owner   => 'jenkins',
+    group   => 'jenkins',
+    mode    => '0750',
+  }
+
+  # Install a Jenkins initialization script
+  file { "${local_data_store}/init.groovy":
+    ensure  => file,
+    owner   => 'jenkins',
+    group   => 'jenkins',
+    mode    => '0640',
+    content => template('jenkins/init_groovy.erb'),
+  }
+
+  exec { $plugin_execs:
+    path => '/usr/bin/curl'
+  }
+
+  # Install Docker if it's not already being installed elsewhere
+  if ! defined_with_params(Class['docker'], {'manage_kernel' => false}) {
+    class { 'docker':
+      # version       => '1.5.0',
+      manage_kernel => false,
+    }
+  }
+
+  # Pulls the official Jenkins image
+  docker::image { 'jenkins':
+    image_tag => $image_version,
+  }
+
+  # Create a container named
+  # - maps ports, volumes and controls init.d startup
+  docker::run { $container_name:
+    image           => 'jenkins',
+    ports           => ["${host_port}:8080"],
+    use_name        => true,
+    volumes         => ["${local_data_store}:${env_jenkins_home}"],
+    restart_service => $run_at_startup,
+    privileged      => false,
+    pull_on_start   => false,
+  }
 
 }
