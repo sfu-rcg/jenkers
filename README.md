@@ -19,13 +19,26 @@ Uses the garethr/docker module to:
 
 ## Usage
 
+    class { 'jenkers':
+      container_name       => 'leeroy',
+      administrator        => 'leeroy',
+      password             => 'jenkins',
+      admin_email_name     => 'Leeroy Jenkins',
+      admin_email_address  => 'leeroy@foo.bar',
+      smtp_host            => 'smtp.foo.bar',
+      image_version        => 'latest',
+      env_jenkins_home     => '/var/jenkins_home',
+      local_data_store     => '/var/jenkins_home',
+      host_port            => '8080',
+      run_at_startup       => true,
+      plugin_source_url    => 'http://mirrors.jenkins-ci.org/plugins/',
+      plugins              => { 'chucknorris' => 'latest' },
+    }
+
 ## Reference
 
-Here, list the classes, types, providers, facts, etc contained in your module.
-This section should include all of the under-the-hood workings of your module so
-people know what the module is touching on their system but don't need to mess
-with things. (We are working on automating this section!)
+Not applicable
 
 ## Limitations
 
-This is where you list OS compatibility, version compatibility, etc.
+Should work on Ubuntu and CentOS with any luck...

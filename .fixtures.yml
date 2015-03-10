@@ -1,10 +1,16 @@
 fixtures:
   forge_modules:
+      apt:
+        repo: "puppetlabs/apt"
+        ref: "1.1.0"
+      epel:
+        repo: "stahnma/epel"
+        ref: "0.0.6"
       docker:
         repo: "garethr/docker"
         ref: "3.3.2"
       stdlib:
         repo: "puppetlabs/stdlib"
-        ref: "2.6.0"
+        ref: "4.1.0"
   symlinks:
     jenkins: "#{source_dir}"
