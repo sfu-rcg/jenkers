@@ -51,15 +51,15 @@ describe 'jenkins' do
         'ws-cleanup'  => '0.25',
       }
 
+      let(:params) do
+        { :plugins => plugins }
+      end
+
       plugins.each do |plugin,version|
         url     = "#{base_url}/#{plugin}/#{version}/#{plugin}.hpi"
         outfile = "#{plugins_dir}/#{plugin}.hpi"
 
-        let(:params) do
-          { :plugins => { plugin => version } }
-        end
-
-        it { should contain_exec ("/usr/bin/curl -sf -o #{outfile} -L #{url}") }
+        it { should contain_exec ("curl -sf -o #{outfile} -L #{url}") }
       end
 
     end

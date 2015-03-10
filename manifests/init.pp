@@ -1,7 +1,7 @@
-# == Class: jenkins
+# == Class: jenkers
 #
 # Installs Docker as required and stands-up an official docker/jenkins
-# instance with simple security.
+# instance with basic security.
 #
 # === Parameters
 #
@@ -46,7 +46,7 @@
 #
 # === Examples
 #
-#  class { 'jenkins':
+#  class { 'jenkers':
 #    container_name => 'leeroy',
 #  }
 #
@@ -58,7 +58,7 @@
 #
 # Copyright 2015 Simon Fraser Univeristy, unless otherwise noted.
 #
-class jenkins (
+class jenkers (
 
   $container_name       = 'jenkins',
   $administrator        = 'leeroy',
@@ -116,6 +116,7 @@ class jenkins (
     content => template('jenkins/init_groovy.erb'),
   }
 
+  # Curl a bunch of plugins, maybe...?
   exec { $plugin_execs:
     path => '/usr/bin'
   }
