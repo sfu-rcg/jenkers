@@ -26,7 +26,7 @@ Returns an Array of curl commands that will install Jenkins plugins. Accepts a b
       raise(Puppet::ParseError, e)
     end
 
-    return {} if plugins.empty?
+    return [] if plugins.empty?
 
     plugins.inject([]) do |memo, (plugin,version)|
       url     = "#{base_url}/#{plugin}/#{version}/#{plugin}.hpi"
