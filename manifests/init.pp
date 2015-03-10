@@ -117,7 +117,7 @@ class jenkins (
   }
 
   exec { $plugin_execs:
-    path => '/usr/bin/curl'
+    path => '/usr/bin'
   }
 
   # Install Docker if it's not already being installed elsewhere
